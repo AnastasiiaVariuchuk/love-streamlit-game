@@ -3,87 +3,103 @@ import random
 import time
 
 st.set_page_config(
-    page_title="Tap the Heart 💖",
+    page_title="Love Slots Deluxe 🎰",
     page_icon="❤️",
     layout="centered"
 )
 
-# -------- SESSION STATE --------
-if "score" not in st.session_state:
-    st.session_state.score = 0
+# ---------- SESSION STATE ----------
+if "reels" not in st.session_state:
+    st.session_state.reels = ["❔", "❔", "❔"]
 
-if "start" not in st.session_state:
-    st.session_state.start = time.time()
+if "coins" not in st.session_state:
+    st.session_state.coins = 100
 
-if "game_over" not in st.session_state:
-    st.session_state.game_over = False
+if "message" not in st.session_state:
+    st.session_state.message = "Tap SPIN to try your luck 💓"
 
-# -------- TIMER --------
-GAME_TIME = 8
-elapsed = time.time() - st.session_state.start
-time_left = max(0, int(GAME_TIME - elapsed))
+# ---------- SYMBOLS ----------
+symbols = ["❤️", "💖", "💘", "💗", "💝"]
 
-if time_left == 0:
-    st.session_state.game_over = True
-
-# -------- STYLES (MOBILE-FIRST) --------
+# ---------- STYLES ----------
 st.markdown("""
 <style>
-.big-heart {
-    font-size: 120px;
-    text-align: center;
-    animation: beat 0.9s infinite;
-}
-@keyframes beat {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.25); }
-    100% { transform: scale(1); }
-}
-.tap-zone {
-    padding: 40px;
-    border-radius: 20px;
+.slot {
+    font-size: 90px;
     text-align: center;
 }
 .info {
     font-size: 22px;
     text-align: center;
+    margin: 10px;
+}
+.message {
+    font-size: 24px;
+    text-align: center;
+    margin-top: 15px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# -------- UI --------
-st.markdown("<h2 style='text-align:center;'>💓 Tap the Heart 💓</h2>", unsafe_allow_html=True)
-st.markdown(f"<div class='info'>⏱ {time_left}s | 💖 {st.session_state.score}</div>", unsafe_allow_html=True)
+# ---------- UI ----------
+st.markdown("<h2 style='text-align:center;'>🎰 Love Slots Deluxe 🎰</h2>", unsafe_allow_html=True)
+st.markdown(f"<div class='info'>💰 Coins: {st.session_state.coins}</div>", unsafe_allow_html=True)
 
-# -------- GAME --------
-if not st.session_state.game_over:
-    heart = random.choice(["❤️", "💖", "💘", "💗", "💝"])
+cols = st.columns(3)
+slots_placeholder = []
 
-    if st.button("TAP 💓", use_container_width=True):
-        st.session_state.score += 1
-        st.rerun()
+for col in cols:
+    slots_placeholder.append(col.empty())
 
-    st.markdown(
-        f"<div class='tap-zone'><div class='big-heart'>{heart}</div></div>",
+for i in range(3):
+    slots_placeholder[i].markdown(
+        f"<div class='slot'>{st.session_state.reels[i]}</div>",
         unsafe_allow_html=True
     )
 
-else:
-    # -------- END SCREEN --------
-    if st.session_state.score >= 6:
-        st.balloons()
-        st.markdown(
-            "<h1 style='text-align:center; color:#ff4b4b;'>❤️ I LOVE YOU ❤️</h1>",
-            unsafe_allow_html=True
-        )
-    else:
-        st.markdown(
-            "<h2 style='text-align:center;'>💔 Try again</h2>",
-            unsafe_allow_html=True
-        )
+st.markdown(f"<div class='message'>{st.session_state.message}</div>", unsafe_allow_html=True)
 
-    if st.button("Play again 🔄", use_container_width=True):
-        st.session_state.score = 0
-        st.session_state.start = time.time()
-        st.session_state.game_over = False
+# ---------- SPIN LOGIC ----------
+if st.button("SPIN 🎲", use_container_width=True):
+
+    if st.session_state.coins < 10:
+        st.session_state.message = "💔 Not enough coins"
         st.rerun()
+
+    st.session_state.coins -= 10
+
+    # Weighted symbols: more chance for hearts
+    weighted_symbols = ["❤️"] * 5 + ["💖"] * 3 + ["💘"] * 2 + ["💗"] * 2 + ["💝"]
+
+    # ⏳ SPIN ANIMATION
+    for _ in range(8):
+        st.session_state.reels = [random.choice(weighted_symbols) for _ in range(3)]
+        for i in range(3):
+            slots_placeholder[i].markdown(
+                f"<div class='slot'>{st.session_state.reels[i]}</div>",
+                unsafe_allow_html=True
+            )
+        time.sleep(0.1)
+
+    r = st.session_state.reels
+    hearts = sum(1 for x in r if x == "❤️")
+
+    # ---------- WIN CONDITIONS ----------
+    if hearts == 3:
+        st.session_state.coins += 100
+        st.session_state.message = "❤️ JACKPOT! My heart is all yours ❤️"
+        st.balloons()
+
+    elif hearts == 2:
+        st.session_state.coins += 20
+        st.session_state.message = "💖 Two hearts! Love is in the air 💖"
+
+    elif hearts == 1:
+        st.session_state.coins += 5
+        st.session_state.message = "💗 One heart… love is close 💗"
+
+    else:
+        st.session_state.message = "💔 No love this time… try again"
+
+    st.rerun()
+
