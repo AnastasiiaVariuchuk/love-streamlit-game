@@ -2,63 +2,75 @@ import streamlit as st
 import random
 import time
 
-st.set_page_config(page_title="Love Game 💖", page_icon="❤️", layout="centered")
+st.set_page_config(
+    page_title="Tap the Heart 💖",
+    page_icon="❤️",
+    layout="centered"
+)
 
-# --------- SESSION STATE ----------
+# -------- SESSION STATE --------
 if "score" not in st.session_state:
     st.session_state.score = 0
 
-if "start_time" not in st.session_state:
-    st.session_state.start_time = time.time()
+if "start" not in st.session_state:
+    st.session_state.start = time.time()
 
 if "game_over" not in st.session_state:
     st.session_state.game_over = False
 
-# --------- TIMER ----------
-GAME_DURATION = 10  # seconds
-elapsed = time.time() - st.session_state.start_time
-time_left = max(0, int(GAME_DURATION - elapsed))
+# -------- TIMER --------
+GAME_TIME = 8
+elapsed = time.time() - st.session_state.start
+time_left = max(0, int(GAME_TIME - elapsed))
 
 if time_left == 0:
     st.session_state.game_over = True
 
-# --------- UI ----------
-st.markdown("<h1 style='text-align:center;'>💘 Catch the Love 💘</h1>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='text-align:center;'>⏱ Time left: {time_left}s</h3>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='text-align:center;'>Score: {st.session_state.score}</h3>", unsafe_allow_html=True)
+# -------- STYLES (MOBILE-FIRST) --------
+st.markdown("""
+<style>
+.big-heart {
+    font-size: 120px;
+    text-align: center;
+    animation: beat 0.9s infinite;
+}
+@keyframes beat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+.tap-zone {
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+}
+.info {
+    font-size: 22px;
+    text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# --------- HEART ANIMATION ----------
-st.markdown(
-    """
-    <style>
-    .heart {
-        font-size: 100px;
-        animation: beat 0.8s infinite;
-    }
-    @keyframes beat {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.3); }
-        100% { transform: scale(1); }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# -------- UI --------
+st.markdown("<h2 style='text-align:center;'>💓 Tap the Heart 💓</h2>", unsafe_allow_html=True)
+st.markdown(f"<div class='info'>⏱ {time_left}s | 💖 {st.session_state.score}</div>", unsafe_allow_html=True)
 
-# --------- GAME LOGIC ----------
+# -------- GAME --------
 if not st.session_state.game_over:
-    cols = st.columns(3)
-    position = random.randint(0, 2)
+    heart = random.choice(["❤️", "💖", "💘", "💗", "💝"])
 
-    with cols[position]:
-        st.markdown("<div class='heart'>❤️</div>", unsafe_allow_html=True)
-        if st.button("Catch 💖"):
-            st.session_state.score += 1
-            st.rerun()
+    if st.button("TAP 💓", use_container_width=True):
+        st.session_state.score += 1
+        st.rerun()
+
+    st.markdown(
+        f"<div class='tap-zone'><div class='big-heart'>{heart}</div></div>",
+        unsafe_allow_html=True
+    )
 
 else:
-    # --------- GAME OVER ----------
-    if st.session_state.score >= 5:
+    # -------- END SCREEN --------
+    if st.session_state.score >= 6:
         st.balloons()
         st.markdown(
             "<h1 style='text-align:center; color:#ff4b4b;'>❤️ I LOVE YOU ❤️</h1>",
@@ -66,12 +78,12 @@ else:
         )
     else:
         st.markdown(
-            "<h2 style='text-align:center;'>💔 Try again!</h2>",
+            "<h2 style='text-align:center;'>💔 Try again</h2>",
             unsafe_allow_html=True
         )
 
-    if st.button("Play again 🔄"):
+    if st.button("Play again 🔄", use_container_width=True):
         st.session_state.score = 0
-        st.session_state.start_time = time.time()
+        st.session_state.start = time.time()
         st.session_state.game_over = False
         st.rerun()
